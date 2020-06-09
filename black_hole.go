@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-func GenFileName() string {
-	now := time.Now().String()
+func GenFileName(fileName string) string {
+	now := fileName + time.Now().String()
 	filename := base64.StdEncoding.EncodeToString([]byte(now))
 	return filename
 }
@@ -35,7 +35,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 		os.Mkdir("/tmp/bh/", 0755)
 		basePath = "/tmp/bh/"
 	}
-	r.ParseMultipartForm(10 << 20)
+	r.ParseMultipartForm(4096)
 	uploadingFile, handler, err := r.FormFile("file")
 	uploadingBytes, err := ioutil.ReadAll(uploadingFile)
 	if err != nil {
@@ -43,7 +43,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("File Name:%s Size:%d Header:%s\n", handler.Filename, handler.Size, handler.Header)
-	tempfile := basePath + GenFileName() + handler.Filename
+	tempfile := basePath + GenFileName(handler.Filename)
 	file, err := SaveFile(tempfile, uploadingBytes)
 	if err != nil {
 		log.Fatalf("%+v\n", err)
