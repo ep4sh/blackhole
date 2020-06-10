@@ -11,7 +11,7 @@ import (
 )
 
 func GenFileName(fileName string) string {
-	now := fileName + time.Now().String()
+	now := fileName + time.Now().Format("20060102150405")
 	filename := base64.StdEncoding.EncodeToString([]byte(now))
 	return filename
 }
@@ -27,7 +27,7 @@ func SaveFile(tempfile string, b []byte) (*os.File, error) {
 	return f, nil
 }
 
-func uploadFile(w http.ResponseWriter, r *http.Request) {
+func uploadFormFile(w http.ResponseWriter, r *http.Request) {
 	basePath, ok := os.LookupEnv("BH_PATH")
 	if !ok {
 		log.Println("Env BH_PATH was not found...")
@@ -35,7 +35,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 		os.Mkdir("/tmp/bh/", 0755)
 		basePath = "/tmp/bh/"
 	}
-	r.ParseMultipartForm(4096)
+	r.ParseMultipartForm(1024 * 1024)
 	uploadingFile, handler, err := r.FormFile("file")
 	uploadingBytes, err := ioutil.ReadAll(uploadingFile)
 	if err != nil {
@@ -50,10 +50,29 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Printf("%s", file.Name())
+}
 
+func uploadFile(w http.ResponseWriter, r *http.Request) {
+	b, err := ioutil.ReadAll(r.Body)
+	basePath, ok := os.LookupEnv("BH_PATH")
+	if !ok {
+		log.Println("Env BH_PATH was not found...")
+		log.Println("Creating default /tmp/bh/ ...")
+		os.Mkdir("/tmp/bh/", 0755)
+		basePath = "/tmp/bh/"
+	}
+
+	tempfile := basePath + GenFileName("")
+	file, err := SaveFile(tempfile, b)
+	if err != nil {
+		log.Fatalf("%+v\n", err)
+	}
+
+	fmt.Printf("%s\n", file.Name())
 }
 
 func main() {
-	http.HandleFunc("/u", uploadFile)
+	http.HandleFunc("/", uploadFile)
+	http.HandleFunc("/uf", uploadFormFile)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
