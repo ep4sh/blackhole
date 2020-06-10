@@ -1,0 +1,15 @@
+Blackhole
+
+bh is ingesting fileshare tool, consist of CLI client and blackhole server
+
+
+Install
+
+//TODO Create install here
+
+
+
+Run
+
+./bh <my_file>
+
