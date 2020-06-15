@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -67,7 +68,9 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("%+v\n", err)
 	}
-
+	resp := []byte(strings.Split(file.Name(), basePath)[1])
+	w.Write(resp)
+	fmt.Printf("%s\n", resp)
 	fmt.Printf("%s\n", file.Name())
 }
 

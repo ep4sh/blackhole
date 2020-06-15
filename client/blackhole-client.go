@@ -24,11 +24,17 @@ func main() {
 	b := bytes.NewReader(buf)
 	// send data
 	resp, err := http.Post(URL, mime.String(), b)
+	if err != nil {
+		log.Fatalf("%+v\n", err)
+	}
+
 	defer resp.Body.Close()
+	rb, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalf("%+v\n", err)
 	} else {
 		log.Printf("Data was successfuly send: %v", resp.Status)
+		log.Printf("Body %s", rb)
 	}
 
 }
