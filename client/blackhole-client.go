@@ -8,11 +8,30 @@ import (
 	"os"
 
 	"github.com/gabriel-vasile/mimetype"
+	"gopkg.in/yaml.v2"
 )
 
+type URL struct {
+	Host string `yaml:"host"`
+}
+
 func main() {
-	URL := "http://localhost:8080"
-	log.Printf("Sending to %s", URL)
+	var url URL
+	configPath, _ := os.LookupEnv("HOME")
+	configPath = configPath + "/" + ".blackhole.yml"
+	yamlConfig, err := ioutil.ReadFile(configPath)
+	err = yaml.Unmarshal(yamlConfig, &url)
+	if err != nil {
+		log.Printf("Cannot parse config file %s", configPath)
+		return
+	}
+	// check if user input file to upload
+	if len(os.Args) < 2 {
+		log.Fatalf("Input file to upload")
+		return
+	}
+
+	log.Printf("Sending to %s", url.Host)
 	// open file
 	file := os.Args[1]
 	mime, err := mimetype.DetectFile(file)
@@ -23,7 +42,7 @@ func main() {
 	}
 	b := bytes.NewReader(buf)
 	// send data
-	resp, err := http.Post(URL, mime.String(), b)
+	resp, err := http.Post(url.Host, mime.String(), b)
 	if err != nil {
 		log.Fatalf("%+v\n", err)
 	}
@@ -34,7 +53,7 @@ func main() {
 		log.Fatalf("%+v\n", err)
 	} else {
 		log.Printf("Data was successfuly send: %v", resp.Status)
-		log.Printf("Body %s", rb)
+		log.Printf("your link ==>  %s", url.Host+"/"+string(rb))
 	}
 
 }
