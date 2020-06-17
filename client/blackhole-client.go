@@ -53,7 +53,7 @@ func main() {
 		log.Fatalf("%+v\n", err)
 	} else {
 		log.Printf("Data was successfuly send: %v", resp.Status)
-		log.Printf("your link ==>  %s", url.Host+"/"+string(rb))
+		log.Printf("your link ==>  %s", url.Host+"?f="+string(rb))
 	}
 
 }
