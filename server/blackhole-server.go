@@ -28,7 +28,7 @@ func SaveFile(tempfile string, b []byte) (*os.File, error) {
 	return f, nil
 }
 
-func uploadFormFile(w http.ResponseWriter, r *http.Request) {
+func createBasepath() string {
 	basePath, ok := os.LookupEnv("BH_PATH")
 	if !ok {
 		log.Println("Env BH_PATH was not found...")
@@ -36,26 +36,15 @@ func uploadFormFile(w http.ResponseWriter, r *http.Request) {
 		os.Mkdir("/tmp/bh/", 0755)
 		basePath = "/tmp/bh/"
 	}
-	r.ParseMultipartForm(1024 * 1024)
-	uploadingFile, handler, err := r.FormFile("file")
-	uploadingBytes, err := ioutil.ReadAll(uploadingFile)
-	if err != nil {
-		log.Fatalf("%+v\n", err)
-		return
-	}
-	log.Printf("File Name:%s Size:%d Header:%s\n", handler.Filename, handler.Size, handler.Header)
-	tempfile := basePath + GenFileName(handler.Filename)
-	file, err := SaveFile(tempfile, uploadingBytes)
-	if err != nil {
-		log.Fatalf("%+v\n", err)
-	}
-
-	fmt.Printf("%s", file.Name())
+	return basePath
 }
 
-func uploadFile(w http.ResponseWriter, r *http.Request) {
+func uploadFile(basePath string, w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
+		keys := r.URL.Query()
+		log.Printf("keys: %v", keys)
+		// filename := basePath + r.
 		//http.ServeFile(w, r, "???")
 	case "POST":
 		b, err := ioutil.ReadAll(r.Body)
@@ -64,22 +53,15 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 			log.Fatalf("%+v\n", err)
 		}
 
-		basePath, ok := os.LookupEnv("BH_PATH")
-		if !ok {
-			log.Println("Env BH_PATH was not found...")
-			log.Println("Creating default /tmp/bh/ ...")
-			os.Mkdir("/tmp/bh/", 0755)
-			basePath = "/tmp/bh/"
-			tempfile := basePath + GenFileName("")
-			file, err := SaveFile(tempfile, b)
-			if err != nil {
-				log.Fatalf("%+v\n", err)
-			}
-			resp := []byte(strings.Split(file.Name(), basePath)[1])
-			w.Write(resp)
-			fmt.Printf("%s\n", resp)
-			fmt.Printf("%s\n", file.Name())
+		tempfile := basePath + GenFileName("")
+		file, err := SaveFile(tempfile, b)
+		if err != nil {
+			log.Fatalf("%+v\n", err)
 		}
+		resp := []byte(strings.Split(file.Name(), basePath)[1])
+		w.Write(resp)
+		fmt.Printf("%s\n", resp)
+		fmt.Printf("%s\n", file.Name())
 	default:
 		fmt.Fprintf(w, "Only GET and POST methods are supported.")
 	}
@@ -87,7 +69,9 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/b", uploadFile)
-	http.HandleFunc("/uf", uploadFormFile)
+	basePath := createBasepath()
+	http.HandleFunc("/b", func(w http.ResponseWriter, r *http.Request) {
+		uploadFile(basePath, w, r)
+	})
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
