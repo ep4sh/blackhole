@@ -60,7 +60,6 @@ func uploadFile(basePath string, w http.ResponseWriter, r *http.Request) {
 		}
 		resp := []byte(strings.Split(file.Name(), basePath)[1])
 		w.Write(resp)
-		fmt.Printf("%s\n", resp)
 		fmt.Printf("%s\n", file.Name())
 	default:
 		fmt.Fprintf(w, "Only GET and POST methods are supported.")
