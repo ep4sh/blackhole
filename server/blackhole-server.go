@@ -23,7 +23,6 @@ func SaveFile(tempfile string, b []byte) (*os.File, error) {
 	if err != nil {
 		log.Fatalf("%+v\n", err)
 	}
-
 	f.Write(b)
 	return f, nil
 }
@@ -42,17 +41,14 @@ func createBasepath() string {
 func uploadFile(basePath string, w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		keys := r.URL.Query()
-		log.Printf("keys: %v", keys)
-		// filename := basePath + r.
-		//http.ServeFile(w, r, "???")
+		file := r.URL.Query().Get("f")
+		log.Printf("Request for the file : %v", file)
+		http.ServeFile(w, r, basePath+file)
 	case "POST":
 		b, err := ioutil.ReadAll(r.Body)
-
 		if err != nil {
 			log.Fatalf("%+v\n", err)
 		}
-
 		tempfile := basePath + GenFileName("")
 		file, err := SaveFile(tempfile, b)
 		if err != nil {
@@ -64,7 +60,6 @@ func uploadFile(basePath string, w http.ResponseWriter, r *http.Request) {
 	default:
 		fmt.Fprintf(w, "Only GET and POST methods are supported.")
 	}
-
 }
 
 func main() {
